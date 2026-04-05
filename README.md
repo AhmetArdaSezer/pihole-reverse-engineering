@@ -8,7 +8,7 @@ Bu çalışma, dünya çapında yaygın olarak kullanılan Pi-hole DNS sinkhole 
 
 ---
 
-## 🛠️ Bölüm 1: Statik Analiz ve String Çıkarımı
+## 🛠️  Statik Analiz ve String Çıkarımı
 Hedef yazılımın kurulumunu üstlenen `basic-install.sh` betiği (Artifact) üzerinde statik kod analizi gerçekleştirilmiştir.
 
 * **Bütünlük Kontrolü (Integrity Check Heuristics):** Kurulum dosyasının sadece bir indirici (downloader) olmadığı, dışarıdan çekilen bağımlılıkları `sha1sum` algoritması ile doğrulayarak MITM saldırılarına karşı bütünlük kontrolü yaptığı tespit edilmiştir.
@@ -18,7 +18,7 @@ Hedef yazılımın kurulumunu üstlenen `basic-install.sh` betiği (Artifact) ü
 
 ![vizeee](https://github.com/user-attachments/assets/65834e40-aa10-44aa-8b1c-a81ae7eafc76)
 
-## 🔬 Bölüm 2: Sandbox İzolasyonu ve Adli Bilişim (Forensics)
+## 🔬  Sandbox İzolasyonu ve Adli Bilişim (Forensics)
 Kurulum işlemleri host makine yerine izole edilmiş bir **Kali Linux Sanal Makinesi (Sandbox)** üzerinde gerçekleştirilmiştir.
 
 Sistemin "İz Silme" (Artifact Removal) yeteneği test edilmiştir. `sudo pihole uninstall` komutu sonrasında:
@@ -29,11 +29,11 @@ Sistemin "İz Silme" (Artifact Removal) yeteneği test edilmiştir. `sudo pihole
 
 ![sudo](https://github.com/user-attachments/assets/bc9caad3-7f90-4d06-9d03-da4b42bc08b3)
 
-## ⚙️ Bölüm 3: Otomasyon Tersine Mühendisliği ve İzolasyon Mimarisi
+## ⚙️  Otomasyon Tersine Mühendisliği ve İzolasyon Mimarisi
 * **CI/CD Pipeline Analizi:** `.github/workflows/test.yml` dosyası analiz edilmiştir. Sistemin "Webhook" mekanizmasıyla entegre çalıştığı ve her "Pull Request" eyleminin insan müdahalesi olmadan otomatik entegrasyon testlerini tetiklediği doğrulanmıştır.
 * **Docker Katmanı İncelemesi:** Uygulamanın `debian:bookworm-slim` gibi minimum saldırı yüzeyine (Minimal Attack Surface) sahip bir katman kullandığı görülmüştür. Bu mimarinin, VM'lerin aksine host Kernel'ini paylaşması tersine mühendislik süreçlerinde bellek analizini farklılaştıran bir unsur olarak belgelenmiştir.
 
-## 🎯 Bölüm 4: Tehdit Modellemesi: pihole-FTL Motoru ve DoH Bypass Saldırısı
+## 🎯  Tehdit Modellemesi: pihole-FTL Motoru ve DoH Bypass Saldırısı
 Projenin odak noktası olan **pihole-FTL** DNS motorunun davranışları incelenmiştir.
 
 * **Sniffing Mekanizması:** FTL motoru, standart UDP/TCP 53 portu üzerinden geçen şifresiz DNS paketlerini yakalar (Sniffing) ve bunları "Gravity" veri yapısıyla karşılaştırır.
@@ -42,7 +42,7 @@ Projenin odak noktası olan **pihole-FTL** DNS motorunun davranışları incelen
 
 
 
-### Adım 5: Kaynak Kod ve Akış Analizi (Threat Modeling)
+###  Kaynak Kod ve Akış Analizi (Threat Modeling)
 
 **1. Entrypoint (Başlangıç Noktası) ve Auth Mekanizması Tespiti:**
 Yapay zeka tabanlı "Reasoning" (Akıl Yürütme) teknikleri kullanılarak uygulamanın kaynak kod dizini taranmıştır. Web arayüzünün giriş noktası (Entrypoint) olarak `login.lp` (Lua Pages) dosyası tespit edilmiştir. 
