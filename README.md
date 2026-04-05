@@ -40,62 +40,58 @@ Projenin odak noktası olan **pihole-FTL** DNS motorunun davranışları incelen
 * **Zafiyet Analizi (DoH Bypass):** Ağdaki bir kullanıcı veya zararlı yazılım, sorgularını Port 53 yerine **Port 443 (HTTPS) üzerinden şifreli tünellerle (DoH)** gönderirse, FTL motorunun paket analiz yeteneği tamamen devre dışı kalmaktadır.
 * **Kavram Kanıtı (Proof of Concept):** Bu sniffing körlüğü, özel bir Python scripti ile simüle edilmiş ve kanıtlanmıştır. *(Bkz: `dns_sniffer_poc.py`)*
 
-### 📊 Veri Akış Şeması: pihole-FTL ve DoH Bypass Modeli
-```mermaid
-graph TD
-    A["İstemci / Zararlı Yazılım"] -->|"1. Şifresiz DNS İsteği"| B("Port 53 - UDP/TCP")
-    A -->|"2. Şifreli DoH İsteği"| C("Port 443 - HTTPS")
-    
-    B --> D{"pihole-FTL (Sniffer)"}
-    D -->|"Paket Okunabilir"| E["Gravity Listesi Heuristikleri"]
-    E -->|"Eşleşme Var"| F(("Sorguyu Engelle / Sinkhole"))
-    
-    C -.->|"Paket Okunamaz"| G["Şifreli Tünel / Dış DNS"]
-    G -.-> H(("Pi-hole FTL BYPASS Edildi!"))
-    
-    style D fill:#f9f,stroke:#333,stroke-width:2px
-    style H fill:#ff4c4c,stroke:#333,stroke-width:2px,color:#fff
 
 
+### Adım 5: Kaynak Kod ve Akış Analizi (Threat Modeling)
 
+**1. Entrypoint (Başlangıç Noktası) ve Auth Mekanizması Tespiti:**
+Yapay zeka tabanlı "Reasoning" (Akıl Yürütme) teknikleri kullanılarak uygulamanın kaynak kod dizini taranmıştır. Web arayüzünün giriş noktası (Entrypoint) olarak `login.lp` (Lua Pages) dosyası tespit edilmiştir. 
 
+* **Auth Mekanizması Keşfi:** Kod analizi sırasında sistemin JWT veya OAuth gibi modern token mimarileri yerine, `<button type="submit" ...>Log in (uses cookie)</button>` satırından da teyit edildiği üzere geleneksel **Stateful Session Cookie (Çerez Tabanlı Oturum)** kullandığı tespit edilmiştir.
 
+**2. THREAT MODELING SİMÜLASYONU 🕵️‍♂️**
 
+* **Kritik Soru 1: Bir hacker bu reponun kodunu incelerken ne tür bir veriyi çalabileceğini nasıl bilir?**
+  * *Reasoning (Akıl Yürütme) Analizi:* Bir hacker açık kaynak kodlu bir repoyu incelerken "Information Gathering" (Bilgi Toplama) yapar. `login.lp` kodunu inceleyen saldırgan, sistemin çerezlerle çalıştığını gördüğü an hedefini belirler: **"Admin Çerezi (Session Hijacking)"**. Hacker bilir ki bu çerezi ele geçirirse veya bu çerez üzerinden işlem yaptırırsa, ağdaki tüm cihazların DNS geçmişini (hangi sitelere girildiğini) çalabilir ve sahte banka sitelerine yönlendirme (DNS Spoofing) yapabilir.
 
+* **Kritik Soru 2: Bulunan auth mekanizmasına dışarıdan nasıl saldırılabilir?**
+  * *Saldırı Vektörü Keşfi:* Kodun içindeki `<form id="loginform">` bloğu derinlemesine incelendiğinde, modern web güvenliği standartlarında olması gereken `Anti-CSRF Token` (istek doğrulama bileti) yapısının bulunmadığı saptanmıştır.
+  * *Sömürü (Exploit) Senaryosu:* Sistem dışarıdan Brute-Force (Kaba Kuvvet) saldırılarına kapalı olsa da, çerez yapısındaki CSRF açığı dışarıdan saldırıya imkan tanır. Saldırgan, halihazırda Pi-hole paneline giriş yapmış (çerezi aktif) kurbana zararsız görünen bir link gönderir (Bkz: Repodaki `csrf_exploit_poc.html`). Kurban linke tıkladığında, arka planda çalışan gizli form kurbanın yetkileriyle Pi-hole API'sine istek atar ve hacker'ın istediği zararlı domaini beyaz listeye ekler.
 
+---
 
+## 🧠 Teorik Altyapı ve Mimari İnceleme
 
-Adım 5: Kaynak Kod ve Akış Analizi (Threat Modeling)
-1. Entrypoint (Başlangıç Noktası) ve Auth Mekanizması Tespiti:
-Yapay zeka tabanlı "Reasoning" (Akıl Yürütme) teknikleri kullanılarak uygulamanın kaynak kod dizini taranmıştır. Web arayüzünün giriş noktası (Entrypoint) olarak login.lp (Lua Pages) dosyası tespit edilmiştir.
+### Sistem İzolasyonu ve Kalıntı (Artifact) Analizi
+Siber güvenlik standartlarında sistem temizliğinin ispatı adli bilişim (forensics) adımlarıyla gerçekleştirilir. Sanal makine (VM) üzerinde yapılan analizlerde, `sudo pihole uninstall` işlemi sonrasında dosya sistemi (`/etc/pihole`), yetkili kullanıcılar (`/etc/passwd` üzerinden) ve ağ portları (`ss -tulpn` üzerinden) detaylıca taranmıştır. İnceleme sonucunda hiçbir konfigürasyon, arka plan servisi veya açık DNS portu kalmadığı somut olarak doğrulanmıştır.
 
-Auth Mekanizması Keşfi: Kod analizi sırasında sistemin JWT veya OAuth gibi modern token mimarileri yerine, <button type="submit" ...>Log in (uses cookie)</button> satırından da teyit edildiği üzere geleneksel Stateful Session Cookie (Çerez Tabanlı Oturum) kullandığı tespit edilmiştir.
-
-2. THREAT MODELING SİMÜLASYONU 🕵️‍♂️
-
-Kritik Soru 1: Bir hacker bu reponun kodunu incelerken ne tür bir veriyi çalabileceğini nasıl bilir?
-
-Reasoning (Akıl Yürütme) Analizi: Bir hacker açık kaynak kodlu bir repoyu incelerken "Information Gathering" (Bilgi Toplama) yapar. login.lp kodunu inceleyen saldırgan, sistemin çerezlerle çalıştığını gördüğü an hedefini belirler: "Admin Çerezi (Session Hijacking)". Hacker bilir ki bu çerezi ele geçirirse veya bu çerez üzerinden işlem yaptırırsa, ağdaki tüm cihazların DNS geçmişini (hangi sitelere girildiğini) çalabilir ve sahte banka sitelerine yönlendirme (DNS Spoofing) yapabilir.
-
-Kritik Soru 2: Bulunan auth mekanizmasına dışarıdan nasıl saldırılabilir?
-
-Saldırı Vektörü Keşfi: Kodun içindeki <form id="loginform"> bloğu derinlemesine incelendiğinde, modern web güvenliği standartlarında olması gereken Anti-CSRF Token (istek doğrulama bileti) yapısının bulunmadığı saptanmıştır.
-
-Sömürü (Exploit) Senaryosu: Sistem dışarıdan Brute-Force (Kaba Kuvvet) saldırılarına kapalı olsa da, çerez yapısındaki CSRF açığı dışarıdan saldırıya imkan tanır. Saldırgan, halihazırda Pi-hole paneline giriş yapmış (çerezi aktif) kurbana zararsız görünen bir link gönderir (Bkz: Repodaki csrf_exploit_poc.html). Kurban linke tıkladığında, arka planda çalışan gizli form kurbanın yetkileriyle Pi-hole API'sine istek atar ve hacker'ın istediği zararlı domaini beyaz listeye ekler.
-
-🧠 Teorik Altyapı ve Mimari İnceleme
-Sistem İzolasyonu ve Kalıntı (Artifact) Analizi
-Siber güvenlik standartlarında sistem temizliğinin ispatı adli bilişim (forensics) adımlarıyla gerçekleştirilir. Sanal makine (VM) üzerinde yapılan analizlerde, sudo pihole uninstall işlemi sonrasında dosya sistemi (/etc/pihole), yetkili kullanıcılar (/etc/passwd üzerinden) ve ağ portları (ss -tulpn üzerinden) detaylıca taranmıştır. İnceleme sonucunda hiçbir konfigürasyon, arka plan servisi veya açık DNS portu kalmadığı somut olarak doğrulanmıştır.
-
-DevSecOps: Webhook ve Otomasyon Tetikleyicileri
+### DevSecOps: Webhook ve Otomasyon Tetikleyicileri
 CI/CD pipeline süreçlerinde "Webhook", sistemlerin birbirleriyle gerçek zamanlı iletişim kurmasını sağlayan HTTP tabanlı bir geri çağırma (callback) mekanizmasıdır. Bu projede, GitHub deposuna yapılan her yeni kod talebi (Pull Request) webhook'ları anında tetikleyerek insan müdahalesiz güvenlik ve linter testlerini başlatır. Bu otomasyon, Güvenli Yazılım Geliştirme Yaşam Döngüsü (Secure SDLC) standartlarının korunmasında kritik bir rol oynar.
 
-Konteyner Mimarisi, VM ve Kubernetes (K8s) Karşılaştırması
-Projenin ağ ortamına dağıtımı, debian:bookworm-slim gibi minimal bir imaj üzerine inşa edilen Docker mimarisiyle sağlanmaktadır.
+### Konteyner Mimarisi, VM ve Kubernetes (K8s) Karşılaştırması
+Projenin ağ ortamına dağıtımı, `debian:bookworm-slim` gibi minimal bir imaj üzerine inşa edilen Docker mimarisiyle sağlanmaktadır. 
+* Geleneksel Sanal Makineler (VM), hipervizör (Hypervisor) aracılığıyla donanımı sanallaştırıp kendi ağır işletim sistemi çekirdeklerini çalıştırırken; Docker, host sistemin çekirdeğini (kernel) paylaşarak çok daha hafif ve izole bir yapı sunar. 
+* Binlerce konteyneri yönetmek için tasarlanan Kubernetes (K8s) orkestrasyon sistemlerinden farklı olarak, Pi-hole gibi tekil çözümler Docker ile izole edilir. Güvenliği maksimize etmek için konteynerin host sisteme erişimi `cap_drop` (capabilities drop) parametreleriyle kısıtlanmalıdır.
 
-Geleneksel Sanal Makineler (VM), hipervizör (Hypervisor) aracılığıyla donanımı sanallaştırıp kendi ağır işletim sistemi çekirdeklerini çalıştırırken; Docker, host sistemin çekirdeğini (kernel) paylaşarak çok daha hafif ve izole bir yapı sunar.
-
-Binlerce konteyneri yönetmek için tasarlanan Kubernetes (K8s) orkestrasyon sistemlerinden farklı olarak, Pi-hole gibi tekil çözümler Docker ile izole edilir. Güvenliği maksimize etmek için konteynerin host sisteme erişimi cap_drop (capabilities drop) parametreleriyle kısıtlanmalıdır.
-
-Saldırgan Perspektifi ve Tehdit İstihbaratı
+### Saldırgan Perspektifi ve Tehdit İstihbaratı
 Kaynak kod analizinde bir saldırganın (Threat Actor) birincil hedefleri API uç noktaları, kimlik doğrulama (Authentication) mekanizmaları ve veritabanı şemalarıdır. Pi-hole sistemini ele geçiren bir saldırgan, ağdaki tüm DNS sorgu geçmişini izleyerek ciddi bir mahremiyet ihlali yaratabilir. Analizimizde tespit edilen Cookie tabanlı yapıdaki "Anti-CSRF Token" eksikliği, saldırganların sosyal mühendislik yoluyla yetkisiz sistem değişiklikleri yapmasına doğrudan zemin hazırlayan en kritik saldırı vektörü olarak modellenmiştir.
+
+---
+
+### 📊 Veri Akış Şeması (CSRF Saldırı Modeli)
+Aşağıdaki diyagram, Anti-CSRF token eksikliği durumunda dışarıdan bir saldırganın web paneline nasıl müdahale edebileceğini göstermektedir:
+
+```mermaid
+graph TD
+    A["Saldırgan (Hacker)"] -->|"1. Zararlı Linki Gönderir"| B("Kurban (Admin)")
+    B -->|"2. Oturumu Açıkken Linke Tıklar"| C{"Zararlı Web Sayfası (POC)"}
+    C -->|"3. Gizli Form Tetiklenir (CSRF)"| D["Pi-hole Web API"]
+    D -->|"4. İşlem Onaylanır (Çerez Geçerli)"| E(("Zararlı Domain Eklendi!"))
+    
+    style C fill:#f9f,stroke:#333,stroke-width:2px
+    style E fill:#ff4c4c,stroke:#333,stroke-width:2px,color:#fff
+
+
+
+
+
