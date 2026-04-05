@@ -1,0 +1,24 @@
+{
+  "analysis_target": "basic-install.sh",
+  "methodology": "Static String Reconnaissance",
+  "indicators_of_compromise": [
+    {
+      "type": "Network_URL",
+      "value": "https://install.pi-hole.net",
+      "risk_level": "Medium",
+      "note": "Kurulum paketlerinin çekildiği ana adres"
+    },
+    {
+      "type": "System_Path",
+      "value": "/etc/pihole",
+      "risk_level": "High",
+      "note": "Root yetkisiyle oluşturulan konfigürasyon dizini"
+    },
+    {
+      "type": "Integrity_Check",
+      "value": "sha1sum",
+      "risk_level": "Low",
+      "note": "İndirilen paketlerin bütünlük doğrulaması için kullanılan algoritma"
+    }
+  ]
+}
