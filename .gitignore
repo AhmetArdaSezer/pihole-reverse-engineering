@@ -1,0 +1,13 @@
+# --- Sistem ve Geçici Dosyalar ---
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# --- Python Kalıntıları ---
+__pycache__/
+*.py[cod]
+
+# --- IDE / Editör Ayarları ---
+.vscode/
+.idea/
