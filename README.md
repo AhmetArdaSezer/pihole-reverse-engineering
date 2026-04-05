@@ -43,15 +43,15 @@ Projenin odak noktası olan **pihole-FTL** DNS motorunun davranışları incelen
 ### 📊 Veri Akış Şeması: pihole-FTL ve DoH Bypass Modeli
 ```mermaid
 graph TD
-    A[İstemci / Zararlı Yazılım] -->|1. Şifresiz DNS İsteği| B(Port 53 - UDP/TCP)
-    A -->|2. Şifreli DoH İsteği| C(Port 443 - HTTPS)
+    A["İstemci / Zararlı Yazılım"] -->|"1. Şifresiz DNS İsteği"| B("Port 53 - UDP/TCP")
+    A -->|"2. Şifreli DoH İsteği"| C("Port 443 - HTTPS")
     
-    B --> D{pihole-FTL (Sniffer)}
-    D -->|Paket Okunabilir| E[Gravity Listesi Heuristikleri]
-    E -->|Eşleşme Var| F((Sorguyu Engelle / Sinkhole))
+    B --> D{"pihole-FTL (Sniffer)"}
+    D -->|"Paket Okunabilir"| E["Gravity Listesi Heuristikleri"]
+    E -->|"Eşleşme Var"| F(("Sorguyu Engelle / Sinkhole"))
     
-    C -.->|Paket Okunamaz| G[Şifreli Tünel / Dış DNS]
-    G -.-> H((Pi-hole FTL BYPASS Edildi!))
+    C -.->|"Paket Okunamaz"| G["Şifreli Tünel / Dış DNS"]
+    G -.-> H(("Pi-hole FTL BYPASS Edildi!"))
     
     style D fill:#f9f,stroke:#333,stroke-width:2px
     style H fill:#ff4c4c,stroke:#333,stroke-width:2px,color:#fff
