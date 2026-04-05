@@ -51,13 +51,21 @@ Yapay zeka tabanlı "Reasoning" (Akıl Yürütme) teknikleri kullanılarak uygul
 
 **2. THREAT MODELING SİMÜLASYONU 🕵️‍♂️**
 
-* **Kritik Soru 1: Bir hacker bu reponun kodunu incelerken ne tür bir veriyi çalabileceğini nasıl bilir?**
-  * *Reasoning (Akıl Yürütme) Analizi:* Bir hacker açık kaynak kodlu bir repoyu incelerken "Information Gathering" (Bilgi Toplama) yapar. `login.lp` kodunu inceleyen saldırgan, sistemin çerezlerle çalıştığını gördüğü an hedefini belirler: **"Admin Çerezi (Session Hijacking)"**. Hacker bilir ki bu çerezi ele geçirirse veya bu çerez üzerinden işlem yaptırırsa, ağdaki tüm cihazların DNS geçmişini (hangi sitelere girildiğini) çalabilir ve sahte banka sitelerine yönlendirme (DNS Spoofing) yapabilir.
+* **Hedef Belirleme ve Reasoning (Akıl Yürütme) Analizi:**
+  Bir saldırgan açık kaynak kodlu bir repoyu incelerken önce kimlik doğrulama mekanizmasına bakar. `login.lp` kodunu inceleyen saldırgan, sistemin JWT gibi tokenlar yerine doğrudan aşağıdaki gibi çerez (cookie) mantığıyla çalıştığını tespit eder:
+  `> <button type="submit" class="btn btn-primary">Log in (uses cookie)</button>`
+  Bunu gören hacker hedefini anında belirler: **"Admin Çerezinin Manipüle Edilmesi (Session Hijacking)"**. Hacker bilir ki bu çerezi ele geçirirse veya bu çerez üzerinden işlem yaptırırsa, ağdaki tüm cihazların DNS geçmişini çalabilir ve kurbanları sahte sitelere yönlendirebilir (DNS Spoofing).
 
-* **Kritik Soru 2: Bulunan auth mekanizmasına dışarıdan nasıl saldırılabilir?**
-  * *Saldırı Vektörü Keşfi:* Kodun içindeki `<form id="loginform">` bloğu derinlemesine incelendiğinde, modern web güvenliği standartlarında olması gereken `Anti-CSRF Token` (istek doğrulama bileti) yapısının bulunmadığı saptanmıştır.
-  * *Sömürü (Exploit) Senaryosu:* Sistem dışarıdan Brute-Force (Kaba Kuvvet) saldırılarına kapalı olsa da, çerez yapısındaki CSRF açığı dışarıdan saldırıya imkan tanır. Saldırgan, halihazırda Pi-hole paneline giriş yapmış (çerezi aktif) kurbana zararsız görünen bir link gönderir (Bkz: Repodaki `csrf_exploit_poc.html`). Kurban linke tıkladığında, arka planda çalışan gizli form kurbanın yetkileriyle Pi-hole API'sine istek atar ve hacker'ın istediği zararlı domaini beyaz listeye ekler.
+* **Saldırı Vektörünün Keşfi (Vulnerability Discovery):**
+  Saldırgan, auth mekanizmasına dışarıdan nasıl sızabileceğini bulmak için kodun içindeki HTML form bloğunu inceler:
+  `> <form id="loginform" method="post" role="form">`
+  Bu yapıyı detaylı inceleyen saldırgan, formun içinde dışarıdan gelen sahte istekleri engelleyecek bir `Anti-CSRF Token` (gizli güvenlik bileti) yapısının **bulunmadığını** saptar. Bu eksiklik, sistemi içeriden vurmaya olanak tanır.
 
+* **Sömürü (Exploit) Senaryosu:**
+  Sistem dışarıdan Brute-Force (Kaba Kuvvet) saldırılarına kapalı olsa da, eksik CSRF koruması sistemi savunmasız bırakır. Saldırgan, halihazırda panele giriş yapmış (çerezi aktif) kurbana zararsız görünen bir oltalama linki gönderir *(Bkz: Repodaki `csrf_exploit_poc.html`)*. 
+  Kurban linke tıkladığında arka planda çalışan gizli kod (Payload) tetiklenir:
+  `> <img src="http://pi.hole/admin/settings.php?tab=api&add_domain=hacker-site.com" style="display:none;">`
+  Kurbanın haberi bile olmadan, sistemdeki kendi aktif çerezi kullanılarak Pi-hole API'sine yetkili istek atılır ve saldırganın ağı ele geçirmesi sağlanır.
 ---
 
 ## 🧠 Teorik Altyapı ve Mimari İnceleme
