@@ -1,7 +1,19 @@
-# 🛡️ Pi-hole: İleri Düzey Tersine Mühendislik ve Sistem Analizi Raporu
-**Öğrenci:** Ahmet Arda Sezer 
-**Bölüm:** Bilişim Güvenliği Teknolojisi
-**Seçilen Senaryo:** Senaryo 7 - DNS Müfettişi / Paket Analizi & Tersine Mühendislik
+# 🔬 Pi-hole: İleri Düzey Tersine Mühendislik ve Sistem Analizi Raporu
+
+> **Öğrenci:** Ahmet Arda Sezer  
+> **Bölüm:** Bilişim Güvenliği Teknolojisi  
+> **Seçilen Senaryo:** Senaryo 7 - DNS Müfettişi / Paket Analizi & Tersine Mühendislik  
+
+
+---
+
+## 📑 İçindekiler (Table of Contents)
+- [🔍 Proje Kapsamı ve Analiz Metodolojisi](#-proje-kapsam%C4%B1-ve-analiz-metodolojisi)
+- [🛠️ Statik Analiz ve String Çıkarımı](#-statik-analiz-ve-string-%C3%A7%C4%B1kar%C4%B1m%C4%B1)
+- [📡 Dinamik Analiz ve Ağ Trafik İncelemesi](#-dinamik-analiz-ve-a%C4%9F-trafik-incelemesi)
+- [📊 Pi-hole DNS Sorgu Akış Şeması](#-pi-hole-dns-sorgu-ak%C4%B1%C5%9F-%C5%9Femas%C4%B1)
+
+---
 
 ## 🔍 Proje Kapsamı ve Analiz Metodolojisi
 Bu çalışma, dünya çapında yaygın olarak kullanılan Pi-hole DNS sinkhole yazılımının kurulum aşamalarını, ağ paketi işleme (sniffing) motorunu ve sistem bütünlüğünü tersine mühendislik disiplinleriyle analiz etmektedir. Projede **Statik Analiz (Static Reconnaissance)**, **Ağ Trafiği Analizi (Packet Sniffing)** ve **Adli Bilişim (Forensics)** metodolojileri bir arada kullanılmış; bulgular YARA kuralları ve JSON formatında yapılandırılmış çıktılarla desteklenmiştir.
