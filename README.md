@@ -1,7 +1,7 @@
 # 🔬 Pi-hole: İleri Düzey Tersine Mühendislik ve Sistem Analizi Raporu
 
 > **Öğrenci:** Ahmet Arda Sezer  
-> **Bölüm:** Bilişim Güvenliği Teknolojisi  
+> **Öğrenci no:** 2420191025
 > **Seçilen Senaryo:** Senaryo 7 - DNS Müfettişi / Paket Analizi & Tersine Mühendislik  
 
 
