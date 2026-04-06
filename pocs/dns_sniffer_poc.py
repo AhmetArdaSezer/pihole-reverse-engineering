@@ -6,7 +6,7 @@
 # ==============================================================================
 
 from scapy.all import sniff, DNSQR
-
+# TODO: Gelecek sürümde IPv6 (DoH) trafiğini analiz edebilmek için TShark entegrasyonu eklenecek.
 def process_packet(packet):
     """
     Yakalanan ağ paketlerini analiz eden ana fonksiyon.
